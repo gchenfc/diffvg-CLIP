@@ -8,13 +8,16 @@ import tqdm
 
 import argparse
 
+
 def main(args):
     from subprocess import call
     call(['rm', '-r', 'results/diffvg_clip'])
 
     # inputs
     # text_prompts = ["a painting of the sunset"]
-    text_prompts_weights = [("a small girl in the grass plays", 1),]
+    text_prompts_weights = [
+        ("a small girl in the grass plays", 1),
+    ]
     WIDTH, HEIGHT = 400, 200
     # WIDTH, HEIGHT = 224, 224 # cut size
 
@@ -33,6 +36,7 @@ def main(args):
         with torch.no_grad():
             text_features = perceptor.encode_text(text)
         img_feature_losses.append(ImageLoss(embed=text_features, weight=weight))
+
     def loss_fcn(img):
         image_features = perceptor.encode_image(make_cutouts(img))
         return sum(img_feature_loss(image_features) for img_feature_loss in img_feature_losses)
@@ -111,9 +115,10 @@ def main(args):
 
     # Convert the intermediate renderings to a video.
     from subprocess import call
-    call(["ffmpeg", "-framerate", "24", '-pattern_type', 'glob', "-i",
-        "results/diffvg_clip/iter_*.png", "-vb", "20M",
-        "results/diffvg_clip/out.mp4"])
+    call([
+        "ffmpeg", "-framerate", "24", '-pattern_type', 'glob', "-i",
+        "results/diffvg_clip/iter_*.png", "-vb", "20M", "results/diffvg_clip/out.mp4"
+    ])
 
     with open('results/diffvg_clip/args.txt', 'w') as f:
         f.write(str(args))
@@ -121,15 +126,16 @@ def main(args):
     import time
     fnamebase = '_'.join(list(zip(*text_prompts_weights))[0]).replace(' ', '-')
     foldername = time.strftime('%Y-%m-%d-%T')
-    call(['cp', '-r', 'results/diffvg_clip', 'results3/{:}_{:}'.format(fnamebase, foldername)])
-    print('results3/{:}'.format(fnamebase))
+    call(['cp', '-r', 'results/diffvg_clip', 'results/{:}_{:}'.format(fnamebase, foldername)])
+    print('results/{:}'.format(fnamebase))
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--cutn", type=int, default=32)
     parser.add_argument("--cut_pow", type=float, default=1.0)
-    parser.add_argument("--num_paths", type=int, default=64)
+    parser.add_argument("--num_paths", type=int, default=1024)
     parser.add_argument("--max_stroke_width", type=int, default=25)
-    parser.add_argument("--num_iter", type=int, default=500)
+    parser.add_argument("--num_iter", type=int, default=200)
     args = parser.parse_args()
     main(args)

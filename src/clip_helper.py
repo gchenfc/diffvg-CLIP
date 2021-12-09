@@ -9,7 +9,9 @@ from torch import nn
 from torch.nn import functional as F
 import kornia.augmentation as K
 
+
 class ReplaceGrad(torch.autograd.Function):
+
     @staticmethod
     def forward(ctx, x_forward, x_backward):
         ctx.shape = x_backward.shape
@@ -22,7 +24,9 @@ class ReplaceGrad(torch.autograd.Function):
 
 replace_grad = ReplaceGrad.apply
 
+
 class ImageLoss(nn.Module):
+
     def __init__(self, embed, weight=1., stop=float('-inf')):
         super().__init__()
         self.register_buffer('embed', embed)
@@ -36,7 +40,9 @@ class ImageLoss(nn.Module):
         dists = dists * self.weight.sign()
         return self.weight.abs() * replace_grad(dists, torch.maximum(dists, self.stop)).mean()
 
+
 class MakeCutouts(nn.Module):
+
     def __init__(self, cut_size, cutn, cut_pow=1.):
         super().__init__()
         self.cut_size = cut_size
@@ -51,11 +57,10 @@ class MakeCutouts(nn.Module):
             # K.RandomResizedCrop(size=(self.cut_size,self.cut_size), scale=(0.1,1),  ratio=(0.75,1.333), cropping_mode='resample', p=0.5),
             # K.RandomCrop(size=(self.cut_size,self.cut_size), p=0.5),
             K.RandomAffine(degrees=15, translate=0.1, p=0.7, padding_mode='border'),
-            K.RandomPerspective(0.7,p=0.7),
+            K.RandomPerspective(0.7, p=0.7),
             K.ColorJitter(hue=0.1, saturation=0.1, p=0.7),
-            K.RandomErasing((.1, .4), (.3, 1/.3), same_on_batch=True, p=0.7),
-            
-)
+            K.RandomErasing((.1, .4), (.3, 1 / .3), same_on_batch=True, p=0.7),
+        )
         self.noise_fac = 0.1
         self.av_pool = nn.AdaptiveAvgPool2d((self.cut_size, self.cut_size))
         self.max_pool = nn.AdaptiveMaxPool2d((self.cut_size, self.cut_size))
@@ -65,7 +70,7 @@ class MakeCutouts(nn.Module):
         max_size = min(sideX, sideY)
         min_size = min(sideX, sideY, self.cut_size)
         cutouts = []
-        
+
         for _ in range(self.cutn):
 
             # size = int(torch.rand([])**self.cut_pow * (max_size - min_size) + min_size)
@@ -75,8 +80,8 @@ class MakeCutouts(nn.Module):
             # cutouts.append(resample(cutout, (self.cut_size, self.cut_size)))
 
             # cutout = transforms.Resize(size=(self.cut_size, self.cut_size))(input)
-            
-            cutout = (self.av_pool(input) + self.max_pool(input))/2
+
+            cutout = (self.av_pool(input) + self.max_pool(input)) / 2
             cutouts.append(cutout)
         batch = self.augs(torch.cat(cutouts, dim=0))
         if self.noise_fac:

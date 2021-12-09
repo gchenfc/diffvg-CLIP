@@ -8,6 +8,7 @@ import torch
 import pydiffvg
 import random
 
+
 def initialize(args, W, H):
     canvas_width, canvas_height = W, H
     num_paths = args.num_paths
@@ -56,25 +57,31 @@ def initialize(args, W, H):
 
     return shapes, shape_groups
 
+
 RENDER = pydiffvg.RenderFunction.apply
+
+
 def render(shapes, shape_groups, canvas_width, canvas_height):
     scene_args = pydiffvg.RenderFunction.serialize_scene(\
         canvas_width, canvas_height, shapes, shape_groups)
 
-    img = RENDER(canvas_width, # width
-                 canvas_height, # height
-                 2,   # num_samples_x
-                 2,   # num_samples_y
-                 0,   # seed
-                 None,
-                 *scene_args)
+    img = RENDER(
+        canvas_width,  # width
+        canvas_height,  # height
+        2,  # num_samples_x
+        2,  # num_samples_y
+        0,  # seed
+        None,
+        *scene_args)
 
     # white background
-    img = img[:, :, 3:4] * img[:, :, :3] + torch.ones(img.shape[0], img.shape[1], 3, device = pydiffvg.get_device()) * (1 - img[:, :, 3:4])
-    
+    img = img[:, :, 3:4] * img[:, :, :3] + torch.ones(
+        img.shape[0], img.shape[1], 3, device=pydiffvg.get_device()) * (1 - img[:, :, 3:4])
+
     return img
+
 
 def convert_img(img):
     img = img.unsqueeze(0)
-    img = img.permute(0, 3, 1, 2) # NHWC -> NCHW
+    img = img.permute(0, 3, 1, 2)  # NHWC -> NCHW
     return img

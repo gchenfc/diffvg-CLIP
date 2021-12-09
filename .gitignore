@@ -1,0 +1,4 @@
+results/*
+!results/reprocess.sh
+
+**/*.pyc
